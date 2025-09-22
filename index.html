@@ -1,19 +1,18 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>3D модель • AR/Web</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- model-viewer -->
+  <!-- ВАЖНО: именно этот скрипт, выше чем тег model-viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="site-head">
-    <h1>Просмотр 3D модели (GLB/USdz) + AR</h1>
-    <p class="hint">Совет: для стабильного AR наведи камеру на матовую плоскость (пол/стол) и хорошее освещение.</p>
+    <h1>Просмотр 3D (GLB/USDZ) + AR</h1>
   </header>
 
   <main class="wrap">
@@ -24,30 +23,16 @@
       alt="3D модель"
       ar
       ar-modes="webxr scene-viewer quick-look"
-      ar-placement="floor"     <!-- ставим на пол -->
-      ar-scale="fixed"         <!-- фиксируем масштаб -->
+      ar-placement="floor"
+      ar-scale="fixed"
       camera-controls
       auto-rotate
-      exposure="1"
       shadow-intensity="1"
-      shadow-softness="0.8"
-      loading="eager"
-      disable-zoom="false"
-      touch-action="pan-y">
-      <!-- Кнопка входа в AR (кастомная, для наглядности) -->
-      <button slot="ar-button" class="ar-button" id="enter-ar">Открыть в AR</button>
-      <div id="ar-prompt" slot="ar-prompt">Наведите камеру на пол/поверхность…</div>
+      exposure="1">
+      <button slot="ar-button" class="ar-button">Открыть в AR</button>
     </model-viewer>
-
-    <section class="controls">
-      <label>
-        Масштаб (для предпросмотра):
-        <input id="scale" type="range" min="0.1" max="3" step="0.1" value="1">
-      </label>
-      <button id="reset">Сброс вида</button>
-    </section>
   </main>
 
-  <script src="script.js"></script>
+  <script src="js/script.js"></script>
 </body>
 </html>
