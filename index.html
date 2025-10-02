@@ -5,7 +5,6 @@
   <title>AIS 3D / AR Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- model-viewer: модуль и запасной вариант для старых браузеров -->
   <script type="module"
     src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
   </script>
@@ -14,236 +13,118 @@
   </script>
 
   <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #181b22;
-      --text: #e7e9ee;
-      --muted: #9aa0aa;
-      --accent: #8fb3ff;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
     body {
       margin: 0;
-      background: radial-gradient(1200px 800px at 70% 10%, #171a21 0%, var(--bg) 60%);
-      color: var(--text);
-      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      min-height: 100vh;
+      font-family: sans-serif;
+      background: #0f1115;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
     header, footer {
-      padding: 14px 20px;
-      background: transparent;
+      padding: 12px 20px;
+      background: #181b22;
+    }
+    main {
+      flex: 1;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      margin: 0;
-      font-size: clamp(18px, 2vw, 22px);
-      letter-spacing: 0.3px;
-      font-weight: 600;
-    }
-    .wrap {
-      display: grid;
-      place-items: center;
-      padding: 14px;
-    }
-    .stage {
-      width: min(1100px, 100%);
-      aspect-ratio: 16/9;
-      background: linear-gradient(180deg, #12151b, #0e1015);
-      border: 1px solid #242938;
-      border-radius: 18px;
-      box-shadow:
-        0 10px 30px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-      overflow: hidden;
-      position: relative;
+      justify-content: center;
+      padding: 10px;
     }
     model-viewer {
       width: 100%;
       height: 100%;
-      --poster-color: transparent;
-      --progress-bar-color: var(--accent);
-      --progress-bar-height: 4px;
-      --poster-image: none;
-      background: transparent;
+      max-width: 1100px;
+      max-height: 80vh;
+      background: #12151b;
+      border-radius: 12px;
     }
-
-    /* Панель управления слева-снизу */
     .controls {
       position: absolute;
-      left: 14px;
-      bottom: 14px;
+      bottom: 20px;
+      left: 20px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      z-index: 2;
     }
     .controls button,
     model-viewer::part(ar-button) {
-      appearance: none;
       border: 1px solid #2a3142;
       background: #1a1f2b;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
-      letter-spacing: .2px;
-      transition: transform .06s ease, border-color .2s ease, background .2s ease;
-      white-space: nowrap;
     }
     .controls button:hover,
     model-viewer::part(ar-button):hover {
-      transform: translateY(-1px);
-      border-color: #39445e;
       background: #202636;
-    }
-    .controls button:active,
-    model-viewer::part(ar-button):active { transform: translateY(0); }
-    model-viewer::part(ar-button) {
-      /* Используем тот же стиль для стандартной AR-кнопки */
-    }
-
-    /* Индикатор загрузки */
-    model-viewer::part(progress-bar) {
-      height: 4px;
-      border-radius: 999px;
-    }
-
-    /* Подсказка "перетащи для вращения" на десктопе */
-    .hint {
-      position: absolute;
-      right: 14px;
-      bottom: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      background: rgba(26,31,43,.7);
-      padding: 6px 10px;
-      border-radius: 10px;
-      border: 1px solid #2a3142;
-      user-select: none;
-    }
-
-    footer {
-      opacity: .75;
-      font-size: 13px;
-      justify-content: center;
-    }
-
-    @media (max-width: 640px) {
-      .stage { border-radius: 12px; }
-      .controls { left: 10px; bottom: 10px; }
-      .hint { display: none; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>AIS — 3D/AR просмотр</h1>
-    <div style="opacity:.7;font-size:14px">GLB в браузере · USDZ в AR на iOS</div>
+    <h2>AIS — 3D/AR просмотр</h2>
   </header>
 
-  <main class="wrap">
-    <div class="stage">
-      <!--
-        ВАЖНО:
-        - src="ais.glb"     — интерактивный просмотр в браузере
-        - ios-src="ais.usdz"— запуск AR Quick Look на iOS
-        - ar-modes          — WebXR (поддерживаемые браузеры), Scene Viewer (Android), Quick Look (iOS)
-        - ar-scale=fixed    — фиксированный масштаб (или "auto" для авто-масштаба)
-        - camera-controls   — управление мышью/тачем
-        - auto-rotate       — лёгкое вращение
-      -->
+  <main>
+    <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center;">
       <model-viewer id="viewer"
         src="ais.glb"
         ios-src="ais.usdz"
         alt="AIS 3D model"
         ar
         ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
         camera-controls
-        touch-action="pan-y"
         auto-rotate
-        rotation-per-second="20deg"
+        ar-scale="fixed"
         shadow-intensity="1"
-        exposure="1.0"
-        environment-image="neutral"
-        disable-zoom="false"
-        autoplay
-        loading="eager"
-        reveal="auto">
-        <!-- Стандартная AR-кнопка от model-viewer (переиспользуем наши стили) -->
+        exposure="1.0">
         <button slot="ar-button">Открыть в AR</button>
       </model-viewer>
 
-      <!-- Кастомные элементы управления -->
       <div class="controls">
-        <button type="button" id="btnFit">Фрейм</button>
-        <button type="button" id="btnCenter">Центр</button>
-        <button type="button" id="btnPause">Пауза авто-вращения</button>
-        <button type="button" id="btnResume" hidden>Продолжить вращение</button>
-        <button type="button" id="btnReset">Сброс камеры</button>
+        <button id="zoomIn">+</button>
+        <button id="zoomOut">-</button>
+        <button id="reset">Сброс</button>
       </div>
-
-      <div class="hint">Поверните модель: перетаскивайте мышью/тачем</div>
     </div>
   </main>
 
   <footer>
-    Работает в современных браузерах. Для AR требуется устройство с поддержкой AR (Android: Scene Viewer, iOS: Quick Look).
+    Управление: мышь/тач (вращение, зум), кнопки (+/-) для масштаба
   </footer>
 
   <script>
     const mv = document.getElementById('viewer');
-    const btnFit = document.getElementById('btnFit');
-    const btnCenter = document.getElementById('btnCenter');
-    const btnPause = document.getElementById('btnPause');
-    const btnResume = document.getElementById('btnResume');
-    const btnReset = document.getElementById('btnReset');
+    const btnIn = document.getElementById('zoomIn');
+    const btnOut = document.getElementById('zoomOut');
+    const btnReset = document.getElementById('reset');
 
-    // Когда модель готова — можно вызывать API кадрирования
-    mv.addEventListener('load', () => {
-      // Попробуем подогнать камеру под весь объект
-      try { mv.cameraOrbit = '0deg 75deg 100%'; mv.fieldOfView = '35deg'; } catch(e){}
+    // Текущий масштаб
+    let scale = 1;
+
+    // Устанавливаем масштаб
+    function applyScale() {
+      mv.scale = `${scale} ${scale} ${scale}`;
+    }
+
+    btnIn.addEventListener('click', () => {
+      scale = Math.min(scale + 0.1, 3); // ограничим максимум х3
+      applyScale();
     });
 
-    // Кнопки управления
-    btnFit.addEventListener('click', () => {
-      // Автокадрирование: 0deg/75deg/расстояние 100% обычно даёт хороший общий план
-      mv.cameraOrbit = '0deg 75deg 100%';
-      mv.fieldOfView = '35deg';
-    });
-
-    btnCenter.addEventListener('click', () => {
-      mv.cameraTarget = '0m 0m 0m'; // ориентировочный центр сцены
-      // Немного приблизим
-      mv.cameraOrbit = '30deg 70deg 85%';
-    });
-
-    btnPause.addEventListener('click', () => {
-      mv.autoRotate = false;
-      btnPause.hidden = true;
-      btnResume.hidden = false;
-    });
-
-    btnResume.addEventListener('click', () => {
-      mv.autoRotate = true;
-      btnResume.hidden = true;
-      btnPause.hidden = false;
+    btnOut.addEventListener('click', () => {
+      scale = Math.max(scale - 0.1, 0.2); // минимум х0.2
+      applyScale();
     });
 
     btnReset.addEventListener('click', () => {
-      // Сброс основных параметров камеры
-      mv.cameraTarget = 'auto';
-      mv.cameraOrbit = 'auto';
-      mv.fieldOfView = 'auto';
-      mv.autoRotate = true;
-      btnResume.hidden = true;
-      btnPause.hidden = false;
+      scale = 1;
+      applyScale();
     });
   </script>
 </body>
