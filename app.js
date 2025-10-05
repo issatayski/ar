@@ -1,4 +1,4 @@
-// v2 — улучшенные подсказки и обработка ошибок
+// v3 — sticky viewer: модель остаётся видимой, текстовые секции переключают камеру
 let KEYFRAMES = [
   { id: 'k1', title: 'Общий вид',     orbit: '0deg 65deg 1.6m',  target: '0m 0m 0m',    fov: '30deg' },
   { id: 'k2', title: 'Деталь спереди',orbit: '45deg 70deg 1.25m', target: '0m 0.02m 0m', fov: '28deg' },
@@ -10,9 +10,7 @@ const gestureHint = document.getElementById('gestureHint');
 const loadError = document.getElementById('loadError');
 
 ['pointerdown','wheel','touchstart','keydown'].forEach(evt => {
-  window.addEventListener(evt, () => {
-    gestureHint && gestureHint.remove();
-  }, { once:true });
+  window.addEventListener(evt, () => { gestureHint && gestureHint.remove(); }, { once:true });
 });
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -26,7 +24,7 @@ function formatTarget(t){ return `${t.x.toFixed(3)}m ${t.y.toFixed(3)}m ${t.z.to
 function parseFov(str){ const m = str.match(/([\-\d.]+)deg/); return m ? +m[1] : 30; }
 function formatFov(v){ return `${v.toFixed(2)}deg`; }
 
-let tween = { active:false, t:0, dur:400, from:null, to:null, start:0, raf:0 };
+let tween = { active:false, t:0, dur:450, from:null, to:null, start:0, raf:0 };
 
 function getCurrentCamera(){
   const orbit = parseOrbit(viewer.getAttribute('camera-orbit') || viewer.cameraOrbit || '0deg 60deg 1.5m');
@@ -39,7 +37,7 @@ function setCamera(o, t, fov){
   viewer.cameraTarget = formatTarget(t);
   viewer.fieldOfView = formatFov(fov);
 }
-function animateTo(kf, duration=500){
+function animateTo(kf, duration=tween.dur){
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) {
     setCamera(parseOrbit(kf.orbit), parseTarget(kf.target), parseFov(kf.fov));
@@ -65,6 +63,7 @@ function animateTo(kf, duration=500){
   tween.raf = requestAnimationFrame(step);
 }
 
+// Привязка секций
 const frames = [...document.querySelectorAll('.frame')];
 const mapFrameToKF = new Map();
 frames.forEach(sec => {
@@ -72,6 +71,8 @@ frames.forEach(sec => {
   const kf = KEYFRAMES.find(k => k.id === id);
   if (kf) mapFrameToKF.set(sec, kf);
 });
+
+// Observer — когда секция занимает >=60% высоты, переключаем ракурс
 const io = new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
     if (entry.isIntersecting && entry.intersectionRatio >= 0.6){
@@ -82,12 +83,12 @@ const io = new IntersectionObserver((entries)=>{
       entry.target.classList.remove('is-active');
     }
   });
-},{ threshold:[0, .6, 1] });
+},{ threshold:[0, .6, 1], rootMargin: '0px 0px -20% 0px' });
 frames.forEach(el => io.observe(el));
 
-// Помощник: показать понятную ошибку, если модель не загрузилась
 viewer.addEventListener('error', (e)=>{
   console.error('Model Viewer Error:', e);
+  const loadError = document.getElementById('loadError');
   if (loadError) loadError.hidden = false;
 });
 viewer.addEventListener('load', ()=>{
@@ -176,7 +177,7 @@ btnImport.addEventListener('click', ()=>{
         if (kf) mapFrameToKF.set(sec, kf);
       });
       buildEditorList();
-      alert('Импортировано! Свяжите ID секций с id кадров при необходимости.');
+      alert('Импортировано! Проверьте соответствие ID секций и кадров.');
     } else {
       alert('Неверный формат JSON.');
     }
@@ -185,15 +186,11 @@ btnImport.addEventListener('click', ()=>{
   }
 });
 
-// Поддержка AR intent для Android — формируем ссылку динамически (если сайт не в корне домена)
+// Android AR link
 window.addEventListener('DOMContentLoaded', ()=>{
   const androidAR = document.querySelector('[data-ar-android]');
   if (androidAR){
-    const glbUrl = new URL('./assets/ais.glb', window.location.href);
+    const glbUrl = new URL('./ais.glb', window.location.href);
     androidAR.href = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl.href)}&mode=ar_preferred`;
   }
-});
-
-window.addEventListener('keydown', (e)=>{
-  if (e.key === 'Escape' && editor.getAttribute('aria-hidden')==='false') hideEditor();
 });

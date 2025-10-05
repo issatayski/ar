@@ -3,21 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Лэндинг с прокруткой (v2)</title>
-  <meta name="description" content="Лёгкий одностраничный сайт: 3D-модель с управлением камерой по скроллу, секции-кадры, AR-кнопки." />
+  <title>3D Лэндинг с закреплённой моделью (v3)</title>
+  <meta name="description" content="Скролл-сторителлинг: 3D‑модель закреплена (sticky) и остаётся в поле зрения, а текстовые секции переключают ракурсы камеры." />
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="./style.css" />
-  <!-- Убрали preload GLB, чтобы избежать проблем в file:// режиме -->
 </head>
 <body>
   <header class="site-header">
     <div class="container header-row">
       <div class="brand">
         <div class="logo" aria-hidden="true">▲</div>
-        <span class="brand-name">Light 3D Scroll</span>
+        <span class="brand-name">Light 3D Scroll · Pinned</span>
       </div>
       <nav class="nav">
-        <a href="#hero">Главная</a>
+        <a href="#top">Главная</a>
         <a href="#k2">Особенности</a>
         <a href="#k3">Детали</a>
         <a href="#faq">FAQ</a>
@@ -26,116 +25,95 @@
     </div>
   </header>
 
-  <main>
-    <!-- HERO -->
-    <section id="hero" class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <h1>Покажите товар в 3D. Легко и быстро.</h1>
-          <p>Модель вращается и приближается во время прокрутки. Каждый ракурс — отдельная польза для клиента.</p>
-          <div class="cta-row">
-            <a class="btn" href="#k1">Смотреть ниже</a>
-            <!-- Сделали относительные пути для AR ссылок -->
-            <a class="btn outline" rel="ar" href="./assets/ais.usdz">Посмотреть в AR (iOS)</a>
-            <a class="btn outline" href="./assets/ais.glb" data-ar-android rel="ar">AR (Android)</a>
-          </div>
-          <p class="hint">Замените <code>./assets/ais.glb</code> и <code>./assets/ais.usdz</code> на свои файлы.</p>
-          <div id="loadError" class="error-banner" hidden>
-            Не удалось загрузить 3D‑модель. Проверьте путь к <code>assets/ais.glb</code>, имя файла и что сайт открыт через <b>http://</b> (а не <code>file://</code>).
-          </div>
-        </div>
-
-        <div class="hero-3d">
-          <model-viewer id="viewer"
-            src="./ais.glb"
-            ios-src="./ais.usdz"
-            alt="3D модель товара"
-            ar ar-modes="webxr scene-viewer quick-look"
-            camera-controls
-            interaction-prompt="none"
-            exposure="1"
-            disable-tap
-            loading="eager"
-            style="width:100%;height:60vh;max-height:720px;">
-          </model-viewer>
-          <div class="gesture-hint" id="gestureHint" aria-hidden="true">Прокрутите вниз</div>
-        </div>
+  <main id="top" class="scrolly">
+    <!-- Sticky 3D Column -->
+    <aside class="scrolly-visual">
+      <div class="visual-wrap">
+        <model-viewer id="viewer"
+          src="./ais.glb"
+          ios-src="./ais.usdz"
+          alt="3D модель товара"
+          ar ar-modes="webxr scene-viewer quick-look"
+          camera-controls
+          interaction-prompt="none"
+          exposure="1"
+          disable-tap
+          reveal="auto"
+          style="width:100%;height:100%;">
+        </model-viewer>
+        <div class="gesture-hint" id="gestureHint" aria-hidden="true">Прокручивайте — ракурсы меняются</div>
       </div>
-    </section>
 
-    <!-- KEYFRAME SECTIONS -->
-    <section class="frame" data-keyframe="k1" id="k1">
-      <div class="container frame-grid">
-        <div class="frame-media"></div>
-        <div class="frame-copy">
-          <h2>Ракурс 1: Общий вид</h2>
-          <p>Короткое описание ключевой выгоды товара на общем ракурсе. Минимум текста — максимум смысла.</p>
-          <ul class="list">
-            <li>Лёгкая интеграция на сайт</li>
-            <li>Высокая производительность</li>
-            <li>Чистый ванильный JS</li>
-          </ul>
-        </div>
+      <div class="ar-row">
+        <a class="btn outline" rel="ar" href="./ais.usdz">AR (iOS)</a>
+        <a class="btn outline" href="./ais.glb" data-ar-android rel="ar">AR (Android)</a>
       </div>
-    </section>
 
-    <section class="frame alt" data-keyframe="k2" id="k2">
-      <div class="container frame-grid">
-        <div class="frame-media"></div>
-        <div class="frame-copy">
-          <h2>Ракурс 2: Критичная деталь</h2>
-          <p>Приближаем камеру к важной зоне. Здесь можно показать текстуру, геометрию, узел или логотип.</p>
-          <ul class="list">
-            <li>Точный контроль камеры</li>
-            <li>Плавная интерполяция</li>
-            <li>Настраиваемые ключевые кадры</li>
-          </ul>
-        </div>
+      <div id="loadError" class="error-banner" hidden>
+        Не удалось загрузить 3D‑модель. Проверьте путь к <code>ais.glb</code> и что сайт открыт по <b>http://</b>, а не <code>file://</code>.
       </div>
-    </section>
+    </aside>
 
-    <section class="frame" data-keyframe="k3" id="k3">
-      <div class="container frame-grid">
-        <div class="frame-media"></div>
-        <div class="frame-copy">
-          <h2>Ракурс 3: Обратная сторона</h2>
-          <p>Покажите вторую сторону или внутреннюю часть. Сопроводите фактами: материалы, надёжность, гарантия.</p>
-          <ul class="list">
-            <li>Работа без тяжёлых библиотек</li>
-            <li>Совместимо с iOS/Android AR</li>
-            <li>Из коробки — семантика и SEO</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    <!-- Scrolling Text Column -->
+    <section class="scrolly-steps">
+      <article class="intro">
+        <h1>Покажите товар в 3D с фиксацией модели</h1>
+        <p>Модель всегда остаётся в кадре, а при прокрутке текстовые блоки переключают ракурсы.</p>
+        <p class="muted small">Замените <code>.ais.glb</code> и <code>.ais.usdz</code> на свои файлы.</p>
+      </article>
 
-    <!-- FAQ -->
-    <section id="faq" class="faq">
-      <div class="container">
+      <section class="frame" data-keyframe="k1" id="k1">
+        <h2>Ракурс 1: Общий вид</h2>
+        <p>Начальный обзор — дайте пользователю представить продукт целиком.</p>
+        <ul class="list">
+          <li>Лёгкая интеграция без тяжёлых библиотек</li>
+          <li>Высокая производительность</li>
+          <li>Настраиваемые ключевые кадры</li>
+        </ul>
+      </section>
+
+      <section class="frame" data-keyframe="k2" id="k2">
+        <h2>Ракурс 2: Критичная деталь</h2>
+        <p>Приближаем камеру к важной зоне: текстура, узел, логотип.</p>
+        <ul class="list">
+          <li>Плавная интерполяция камеры</li>
+          <li>Точный контроль <code>cameraOrbit/Target/FOV</code></li>
+          <li>JSON-редактор ракурсов</li>
+        </ul>
+      </section>
+
+      <section class="frame" data-keyframe="k3" id="k3">
+        <h2>Ракурс 3: Обратная сторона</h2>
+        <p>Покажите внутреннюю часть или обратную сторону и добавьте факты: материалы, гарантия, надёжность.</p>
+        <ul class="list">
+          <li>Работает на мобильных и десктопе</li>
+          <li>Поддержка AR для iOS/Android</li>
+          <li>Семантика и базовый SEO</li>
+        </ul>
+      </section>
+
+      <section id="faq" class="faq">
         <h2>FAQ</h2>
+        <details>
+          <summary>Где настраиваются ракурсы?</summary>
+          <p>Откройте редактор (кнопка в шапке) — задайте углы/цель/угол обзора, экспортируйте JSON.</p>
+        </details>
         <details>
           <summary>Как заменить модель на свою?</summary>
           <p>Положите свои файлы <code>ais.glb</code> и <code>ais.usdz</code> в папку <code>assets/</code> с теми же именами.</p>
         </details>
-        <details>
-          <summary>Где настраиваются ракурсы?</summary>
-          <p>Откройте редактор (кнопка в шапке) — можно задать углы, цель и угол обзора для каждой секции. Потом экспортируйте JSON.</p>
-        </details>
-        <details>
-          <summary>Это будет работать на мобильных?</summary>
-          <p>Да, есть адаптивная верстка и AR-кнопки для iOS/Android.</p>
-        </details>
-      </div>
+      </section>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-row">
       <div>© 2025 Light 3D Scroll</div>
-      <div class="muted">Сделано без тяжёлых библиотек</div>
+      <div class="muted">Sticky‑модель · без тяжёлых библиотек</div>
     </div>
   </footer>
 
+  <!-- Редактор -->
   <aside id="editor" class="editor" aria-hidden="true">
     <div class="editor-head">
       <strong>Редактор ракурсов</strong>
