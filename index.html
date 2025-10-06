@@ -1,29 +1,40 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <title>3D модель в браузере</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <!-- Подключаем модель-вьювер -->
+  <meta charset="utf-8">
+  <title>3D модель • AR/Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Просмотр 3D модели</h1>
+  <header class="site-head">
+    <h1>Просмотр 3D модели (GLB / USDZ) + AR</h1>
+    <p class="hint">Открой эту страницу по адресу https://USERNAME.github.io/REPO/</p>
+  </header>
 
-  <model-viewer 
+  <main class="wrap">
+    <model-viewer
+      id="viewer"
       src="https://ordaprint.kz/files/ais1.glb"
       ios-src="ais-prof1.usdz"
       alt="3D модель"
       ar
       ar-modes="webxr scene-viewer quick-look"
-      auto-rotate
+      ar-placement="floor"
+      ar-scale="fixed"
       camera-controls
+      auto-rotate
+      exposure="1"
       shadow-intensity="1"
-      exposure="1">
-  </model-viewer>
+      shadow-softness="0.8"
+      loading="eager"
+      disable-zoom="false"
+      touch-action="pan-y">
+      <button slot="ar-button" class="ar-button" id="enter-ar">Открыть в AR</button>
+      <div id="ar-prompt" slot="ar-prompt">Наведите камеру на пол/поверхность…</div>
+    </model-viewer>
+  </main>
 
   <script src="script.js"></script>
 </body>
