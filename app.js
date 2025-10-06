@@ -190,7 +190,7 @@ btnImport.addEventListener('click', ()=>{
 window.addEventListener('DOMContentLoaded', ()=>{
   const androidAR = document.querySelector('[data-ar-android]');
   if (androidAR){
-    const glbUrl = new URL('./ais.glb', window.location.href);
+    const glbUrl = new URL('https://ordaprint.kz/files/ais.glb', window.location.href);
     androidAR.href = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl.href)}&mode=ar_preferred`;
   }
 });
