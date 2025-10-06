@@ -2,137 +2,130 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
+  <title>AIS 3D / AR Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Лэндинг с закреплённой моделью (v3)</title>
-  <meta name="description" content="Скролл-сторителлинг: 3D‑модель закреплена (sticky) и остаётся в поле зрения, а текстовые секции переключают ракурсы камеры." />
-  <link rel="preconnect" href="https://unpkg.com" />
-  <link rel="stylesheet" href="./style.css" />
+
+  <script type="module"
+    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
+  </script>
+  <script nomodule
+    src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js">
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #0f1115;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header, footer {
+      padding: 12px 20px;
+      background: #181b22;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      max-width: 1100px;
+      max-height: 80vh;
+      background: #12151b;
+      border-radius: 12px;
+    }
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .controls button,
+    model-viewer::part(ar-button) {
+      border: 1px solid #2a3142;
+      background: #1a1f2b;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .controls button:hover,
+    model-viewer::part(ar-button):hover {
+      background: #202636;
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-row">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">▲</div>
-        <span class="brand-name">Light 3D Scroll · Pinned</span>
-      </div>
-      <nav class="nav">
-        <a href="#top">Главная</a>
-        <a href="#k2">Особенности</a>
-        <a href="#k3">Детали</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <button id="toggleEditor" class="btn small" aria-pressed="false">Редактор</button>
-    </div>
+  <header>
+    <h2>AIS — 3D/AR просмотр</h2>
   </header>
 
-  <main id="top" class="scrolly">
-    <!-- Sticky 3D Column -->
-    <aside class="scrolly-visual">
-      <div class="visual-wrap">
-        <model-viewer id="viewer"
-          src="https://ordaprint.kz/files/ais1.glb"
-          ios-src="./ais1.usdz"
-          alt="3D модель товара"
-          ar ar-modes="webxr scene-viewer quick-look"
-          camera-controls
-          interaction-prompt="none"
-          exposure="1"
-          disable-tap
-          reveal="auto"
-          style="width:100%;height:100%;">
-        </model-viewer>
-        <div class="gesture-hint" id="gestureHint" aria-hidden="true">Прокручивайте — ракурсы меняются</div>
+  <main>
+    <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center;">
+      <model-viewer id="viewer"
+        src="https://ordaprint.kz/files/ais1.glb"
+        ios-src="ais.usdz"
+        alt="AIS 3D model"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        camera-controls
+        auto-rotate
+        ar-scale="fixed"
+        shadow-intensity="1"
+        exposure="1.0">
+        <button slot="ar-button">Открыть в AR</button>
+      </model-viewer>
+
+      <div class="controls">
+        <button id="zoomIn">+</button>
+        <button id="zoomOut">-</button>
+        <button id="reset">Сброс</button>
       </div>
-
-      <div class="ar-row">
-        <a class="btn outline" rel="ar" href="https://ordaprint.kz/files/ais1.usdz">AR (iOS)</a>
-        <a class="btn outline" href="https://ordaprint.kz/files/ais1.glb" data-ar-android rel="ar">AR (Android)</a>
-      </div>
-
-      <div id="loadError" class="error-banner" hidden>
-        Не удалось загрузить 3D‑модель. Проверьте путь к <code>ais1.glb</code> и что сайт открыт по <b>http://</b>, а не <code>file://</code>.
-      </div>
-    </aside>
-
-    <!-- Scrolling Text Column -->
-    <section class="scrolly-steps">
-      <article class="intro">
-        <h1>Покажите товар в 3D с фиксацией модели</h1>
-        <p>Модель всегда остаётся в кадре, а при прокрутке текстовые блоки переключают ракурсы.</p>
-        <p class="muted small">Замените <code>.ais1.glb</code> и <code>.ais1.usdz</code> на свои файлы.</p>
-      </article>
-
-      <section class="frame" data-keyframe="k1" id="k1">
-        <h2>Ракурс 1: Общий вид</h2>
-        <p>Начальный обзор — дайте пользователю представить продукт целиком.</p>
-        <ul class="list">
-          <li>Лёгкая интеграция без тяжёлых библиотек</li>
-          <li>Высокая производительность</li>
-          <li>Настраиваемые ключевые кадры</li>
-        </ul>
-      </section>
-
-      <section class="frame" data-keyframe="k2" id="k2">
-        <h2>Ракурс 2: Критичная деталь</h2>
-        <p>Приближаем камеру к важной зоне: текстура, узел, логотип.</p>
-        <ul class="list">
-          <li>Плавная интерполяция камеры</li>
-          <li>Точный контроль <code>cameraOrbit/Target/FOV</code></li>
-          <li>JSON-редактор ракурсов</li>
-        </ul>
-      </section>
-
-      <section class="frame" data-keyframe="k3" id="k3">
-        <h2>Ракурс 3: Обратная сторона</h2>
-        <p>Покажите внутреннюю часть или обратную сторону и добавьте факты: материалы, гарантия, надёжность.</p>
-        <ul class="list">
-          <li>Работает на мобильных и десктопе</li>
-          <li>Поддержка AR для iOS/Android</li>
-          <li>Семантика и базовый SEO</li>
-        </ul>
-      </section>
-
-      <section id="faq" class="faq">
-        <h2>FAQ</h2>
-        <details>
-          <summary>Где настраиваются ракурсы?</summary>
-          <p>Откройте редактор (кнопка в шапке) — задайте углы/цель/угол обзора, экспортируйте JSON.</p>
-        </details>
-        <details>
-          <summary>Как заменить модель на свою?</summary>
-          <p>Положите свои файлы <code>ais1.glb</code> и <code>ais1.usdz</code> в папку <code>assets/</code> с теми же именами.</p>
-        </details>
-      </section>
-    </section>
+    </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-row">
-      <div>© 2025 Light 3D Scroll</div>
-      <div class="muted">Sticky‑модель · без тяжёлых библиотек</div>
-    </div>
+  <footer>
+    Управление: мышь/тач (вращение, зум), кнопки (+/-) для масштаба
   </footer>
 
-  <!-- Редактор -->
-  <aside id="editor" class="editor" aria-hidden="true">
-    <div class="editor-head">
-      <strong>Редактор ракурсов</strong>
-      <button id="closeEditor" class="icon-btn" aria-label="Закрыть">✕</button>
-    </div>
-    <div class="editor-body">
-      <p class="muted small">Выбирайте секцию и задавайте параметры камеры. Можно подставить текущие значения из вьюера.</p>
-      <div id="editorList" class="editor-list"></div>
-      <div class="editor-actions">
-        <button id="btnImport" class="btn small">Импорт JSON</button>
-        <button id="btnExport" class="btn small">Экспорт JSON</button>
-      </div>
-      <textarea id="jsonIO" class="json-io" placeholder='Вставьте/скопируйте JSON конфиг здесь'></textarea>
-    </div>
-  </aside>
+  <script>
+    const mv = document.getElementById('viewer');
+    const btnIn = document.getElementById('zoomIn');
+    const btnOut = document.getElementById('zoomOut');
+    const btnReset = document.getElementById('reset');
 
-  <script type="module" defer>
-    import 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+    // Текущий масштаб
+    let scale = 1;
+
+    // Устанавливаем масштаб
+    function applyScale() {
+      mv.scale = `${scale} ${scale} ${scale}`;
+    }
+
+    btnIn.addEventListener('click', () => {
+      scale = Math.min(scale + 0.1, 3); // ограничим максимум х3
+      applyScale();
+    });
+
+    btnOut.addEventListener('click', () => {
+      scale = Math.max(scale - 0.1, 0.2); // минимум х0.2
+      applyScale();
+    });
+
+    btnReset.addEventListener('click', () => {
+      scale = 1;
+      applyScale();
+    });
   </script>
-  <script src="./app.js" defer></script>
 </body>
 </html>
