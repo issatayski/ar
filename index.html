@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>AR-нысан · Шымкент</title>
+
+<!-- ============================================================= -->
+<!--  AR.js (location-based) + A-Frame. Версии зафиксированы.       -->
+<!--  ВАЖНО: страница работает ТОЛЬКО по HTTPS и в браузере телефона -->
+<!--  (нужны камера + GPS + компас/гироскоп).                        -->
+<!-- ============================================================= -->
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/three.js/build/ar-threex-location-only.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
+
+<!-- Шрифты: Unbounded (заголовок) + Golos Text (текст) — оба с кириллицей -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --green:#0d4d35;
+    --green-2:#0a3a28;
+    --gold:#e0b653;
+    --gold-bright:#ffd66b;
+    --ink:#06241a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;
+            font-family:"Golos Text",system-ui,sans-serif;}
+
+  /* ---- Стартовый экран (крупный, высокий контраст) ---- */
+  #overlay{
+    position:fixed; inset:0; z-index:9999;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    text-align:center; padding:28px;
+    background:
+      radial-gradient(120% 90% at 50% 0%, var(--green) 0%, var(--green-2) 55%, var(--ink) 100%);
+    color:#fff;
+  }
+  #overlay::before{
+    content:""; position:absolute; inset:0; opacity:.10; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(45deg, var(--gold) 0 2px, transparent 2px 22px),
+      repeating-linear-gradient(-45deg, var(--gold) 0 2px, transparent 2px 22px);
+  }
+  .ov-inner{position:relative; max-width:560px;}
+  .badge{
+    display:inline-block; font-family:"Unbounded"; font-weight:600; font-size:15px;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--gold-bright);
+    border:2px solid var(--gold); border-radius:999px; padding:8px 18px; margin-bottom:22px;
+  }
+  h1{
+    font-family:"Unbounded"; font-weight:800; line-height:1.05;
+    font-size:clamp(30px,8vw,46px); margin:0 0 18px; color:#fff;
+    text-shadow:0 2px 0 rgba(0,0,0,.35);
+  }
+  .lead{font-size:clamp(18px,4.6vw,22px); font-weight:500; line-height:1.5; color:#eafff3; margin:0 auto 26px; max-width:480px;}
+  .steps{
+    text-align:left; font-size:clamp(17px,4.4vw,20px); line-height:1.55;
+    background:rgba(0,0,0,.28); border:2px solid rgba(224,182,83,.5); border-radius:18px;
+    padding:18px 20px 18px 20px; margin:0 0 28px;
+  }
+  .steps b{color:var(--gold-bright);}
+  .steps p{margin:0 0 10px; padding-left:30px; position:relative;}
+  .steps p:last-child{margin-bottom:0;}
+  .steps p::before{content:"›"; position:absolute; left:6px; color:var(--gold); font-weight:800; font-size:22px; line-height:1;}
+  #startBtn{
+    appearance:none; border:none; cursor:pointer;
+    font-family:"Unbounded"; font-weight:800; font-size:clamp(20px,5.4vw,26px);
+    color:var(--ink); background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    padding:20px 40px; border-radius:18px; width:100%; max-width:420px;
+    box-shadow:0 10px 0 rgba(0,0,0,.35), 0 0 0 3px rgba(255,255,255,.15) inset;
+    transition:transform .08s ease;
+  }
+  #startBtn:active{transform:translateY(4px); box-shadow:0 6px 0 rgba(0,0,0,.35);}
+  .note{margin-top:18px; font-size:14px; color:#bfe7d3; opacity:.85;}
+
+  /* ---- HUD поверх камеры ---- */
+  #hud{
+    position:fixed; left:0; right:0; top:0; z-index:9000;
+    display:flex; justify-content:center; pointer-events:none; padding:14px 12px;
+  }
+  #hud .pill{
+    background:rgba(6,36,26,.82); border:2px solid var(--gold);
+    color:#fff; border-radius:999px; padding:12px 22px;
+    font-family:"Unbounded"; font-weight:600; font-size:clamp(16px,4.6vw,20px);
+    box-shadow:0 6px 20px rgba(0,0,0,.4); display:flex; align-items:center; gap:10px;
+  }
+  #hud .dot{width:12px;height:12px;border-radius:50%;background:#ff5a5a;}
+  #hud.ready .dot{background:#46e08a;}
+  #hud .dist{color:var(--gold-bright);}
+
+  .arjs-loader{
+    height:100%; width:100%; position:absolute; top:0; left:0; z-index:8000;
+    background:rgba(6,36,26,.92); display:flex; justify-content:center; align-items:center;
+    color:#fff; font-size:20px; font-family:"Unbounded";
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================  СТАРТОВЫЙ ЭКРАН  =================== -->
+<div id="overlay">
+  <div class="ov-inner">
+    <div class="badge">AR · Шымкент</div>
+    <h1>Найди объект<br>в реальном мире</h1>
+    <p class="lead">Наведи камеру телефона в сторону точки — там появится 3D-объект. Чем ближе подходишь, тем он крупнее.</p>
+    <div class="steps">
+      <p>Разреши <b>камеру</b>, <b>геопозицию</b> и <b>движение</b></p>
+      <p>Выйди на <b>открытое место</b> (под небом точнее GPS)</p>
+      <p>Медленно поводи телефоном — компас откалибруется</p>
+    </div>
+    <button id="startBtn">Бастау · Начать</button>
+    <div class="note">Если объект «уехал» в сторону — поверни телефон «восьмёркой», это калибрует компас.</div>
+  </div>
+</div>
+
+<!-- ===================  HUD  =================== -->
+<div id="hud">
+  <div class="pill"><span class="dot"></span><span id="status">GPS ізделуде…</span></div>
+</div>
+
+<!-- ===================  AR-СЦЕНА  =================== -->
+<!-- Для теста на КОМПЬЮТЕРЕ можно добавить в gps-new-camera:
+     simulateLatitude: 42.3168; simulateLongitude: 69.5876
+     (тогда камера будет «стоять» в этой точке).  -->
+<a-scene
+  vr-mode-ui="enabled: false"
+  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false"
+  renderer="antialias: true; alpha: true"
+  embedded>
+
+  <a-camera gps-new-camera="gpsMinDistance: 5"></a-camera>
+
+  <!-- Объект-маяк. Координаты подставляются из CONFIG в JS ниже. -->
+  <a-entity id="poi" distance-hud>
+    <!-- основание-кольцо, медленно вращается -->
+    <a-torus color="#e0b653" radius="2.4" radius-tubular="0.18"
+             rotation="-90 0 0" position="0 0.2 0"
+             animation="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear"></a-torus>
+    <!-- колонна -->
+    <a-cylinder color="#0d4d35" radius="0.9" height="5" position="0 2.7 0"
+                material="metalness:0.1; roughness:0.7"></a-cylinder>
+    <!-- золотой пояс -->
+    <a-cylinder color="#e0b653" radius="0.95" height="0.5" position="0 4.1 0"></a-cylinder>
+    <!-- навершие -->
+    <a-cone color="#ffd66b" radius-bottom="1.3" radius-top="0" height="2.4" position="0 6.4 0"></a-cone>
+    <!-- парящая «искра», покачивается вверх-вниз -->
+    <a-octahedron color="#ffd66b" radius="0.7" position="0 9 0"
+                  animation="property: position; to: 0 9.8 0; dir: alternate; loop: true; dur: 1600; easing: easeInOutSine"
+                  animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-octahedron>
+    <!-- подпись, всегда смотрит на игрока -->
+    <a-text id="poiLabel" value="Тарихи нысан"
+            look-at="[gps-new-camera]"
+            align="center" color="#ffffff"
+            position="0 11 0" scale="14 14 14"
+            material="shader: msdf"
+            geometry="primitive: plane; width: auto"></a-text>
+  </a-entity>
+</a-scene>
+
+<script>
+/* ================================================================
+   НАСТРОЙКИ — меняй здесь
+   ================================================================ */
+const CONFIG = {
+  // 'demo'  → объект ставится в N метрах СЕВЕРНЕЕ того места, где ты стоишь
+  //           (гарантированно увидишь — для первого теста).
+  // 'fixed' → объект стоит в заданных координатах (для реальной игры).
+  mode: 'demo',
+
+  demoDistanceMeters: 25,   // на сколько метров севернее в режиме demo
+
+  // Координаты объекта в режиме 'fixed' (пример: р-н пл. Ордабасы, Шымкент —
+  // заменишь на свои):
+  latitude:  42.3168,
+  longitude: 69.5876,
+
+  label: 'Тарихи нысан'     // подпись над объектом
+};
+/* ================================================================ */
+
+document.getElementById('poiLabel').setAttribute('value', CONFIG.label);
+
+// Расчёт расстояния игрок ↔ объект, вывод в HUD
+AFRAME.registerComponent('distance-hud', {
+  init(){
+    this.cam = document.querySelector('[gps-new-camera]');
+    this.a = new THREE.Vector3();
+    this.b = new THREE.Vector3();
+    this.t = 0;
+    this.statusEl = document.getElementById('status');
+    this.hudEl = document.getElementById('hud');
+  },
+  tick(time){
+    if (!window.__gpsReady || !this.cam) return;
+    if (time - this.t < 250) return;   // обновляем ~4 раза/сек
+    this.t = time;
+    this.el.object3D.getWorldPosition(this.a);
+    this.cam.object3D.getWorldPosition(this.b);
+    const dx = this.a.x - this.b.x, dz = this.a.z - this.b.z;
+    const d = Math.round(Math.sqrt(dx*dx + dz*dz));
+    this.hudEl.classList.add('ready');
+    this.statusEl.innerHTML = 'До объекта: <span class="dist">' + d + ' м</span>';
+  }
+});
+
+window.__gpsReady = false;
+
+// Подставляем координаты объекта в зависимости от режима
+function placePoi(){
+  const poi = document.getElementById('poi');
+
+  if (CONFIG.mode === 'fixed'){
+    poi.setAttribute('gps-new-entity-place',
+      `latitude: ${CONFIG.latitude}; longitude: ${CONFIG.longitude}`);
+    return;
+  }
+
+  // demo: берём текущую позицию и сдвигаем на N метров к северу
+  if (!navigator.geolocation){
+    alert('Геолокация недоступна в этом браузере.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      const lat = pos.coords.latitude + (CONFIG.demoDistanceMeters / 111320);
+      const lng = pos.coords.longitude;
+      poi.setAttribute('gps-new-entity-place', `latitude: ${lat}; longitude: ${lng}`);
+    },
+    (err)=>{ alert('Не удалось получить GPS: ' + err.message); },
+    { enableHighAccuracy:true, timeout:15000 }
+  );
+}
+
+// Старт по кнопке (нужно для iOS — разрешение на датчики только по тапу)
+document.getElementById('startBtn').addEventListener('click', async ()=>{
+  try{
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function'){
+      await DeviceOrientationEvent.requestPermission();
+    }
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function'){
+      await DeviceMotionEvent.requestPermission();
+    }
+  }catch(e){ /* пользователь мог отклонить — продолжаем */ }
+
+  placePoi();
+  document.getElementById('overlay').style.display = 'none';
+});
+
+// Ловим первый GPS-фикс камеры → включаем HUD
+window.addEventListener('load', ()=>{
+  const cam = document.querySelector('[gps-new-camera]');
+  if (cam){
+    cam.addEventListener('gps-camera-update-position', ()=>{ window.__gpsReady = true; });
+  }
+});
+</script>
+</body>
+</html>
