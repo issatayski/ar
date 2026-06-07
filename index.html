@@ -156,10 +156,8 @@
     <!-- подпись, всегда смотрит на игрока -->
     <a-text id="poiLabel" value="Тарихи нысан"
             look-at="[gps-new-camera]"
-            align="center" color="#ffffff"
-            position="0 11 0" scale="14 14 14"
-            material="shader: msdf"
-            geometry="primitive: plane; width: auto"></a-text>
+            align="center" color="#ffd66b"
+            position="0 11 0" scale="14 14 14"></a-text>
   </a-entity>
 </a-scene>
 
@@ -171,14 +169,14 @@ const CONFIG = {
   // 'demo'  → объект ставится в N метрах СЕВЕРНЕЕ того места, где ты стоишь
   //           (гарантированно увидишь — для первого теста).
   // 'fixed' → объект стоит в заданных координатах (для реальной игры).
-  mode: 'fixed',
+  mode: 'demo',
 
   demoDistanceMeters: 25,   // на сколько метров севернее в режиме demo
 
   // Координаты объекта в режиме 'fixed' (пример: р-н пл. Ордабасы, Шымкент —
   // заменишь на свои):
-  latitude:  42.295123,
-  longitude: 69.550993,
+  latitude:  42.3168,
+  longitude: 69.5876,
 
   label: 'Тарихи нысан'     // подпись над объектом
 };
