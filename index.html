@@ -153,11 +153,13 @@
     <a-octahedron color="#ffd66b" radius="0.7" position="0 9 0"
                   animation="property: position; to: 0 9.8 0; dir: alternate; loop: true; dur: 1600; easing: easeInOutSine"
                   animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-octahedron>
-    <!-- подпись, всегда смотрит на игрока -->
-    <a-text id="poiLabel" value="Тарихи нысан"
-            look-at="[gps-new-camera]"
-            align="center" color="#ffd66b"
-            position="0 11 0" scale="14 14 14"></a-text>
+    <!-- подпись: казахский шрифт (MSDF), видна ближе CONFIG.labelRevealMeters, смотрит на игрока -->
+    <a-entity id="poiLabel" visible="false"
+              look-at="[gps-new-camera]"
+              position="0 11 0" scale="14 14 14"
+              text="value: Тарихи нысан; align: center; color: #ffd66b;
+                    shader: msdf; negate: false;
+                    font: kk-msdf.json; font-image: kk-msdf.png"></a-entity>
   </a-entity>
 </a-scene>
 
@@ -178,16 +180,19 @@ const CONFIG = {
   latitude:  42.3168,
   longitude: 69.5876,
 
-  label: 'Тарихи нысан'     // подпись над объектом
+  label: 'Тарихи нысан',    // подпись над объектом
+
+  labelRevealMeters: 10     // подпись появляется, когда подошёл ближе этого (м)
 };
 /* ================================================================ */
 
-document.getElementById('poiLabel').setAttribute('value', CONFIG.label);
+document.getElementById('poiLabel').setAttribute('text', 'value', CONFIG.label);
 
 // Расчёт расстояния игрок ↔ объект, вывод в HUD
 AFRAME.registerComponent('distance-hud', {
   init(){
     this.cam = document.querySelector('[gps-new-camera]');
+    this.label = document.getElementById('poiLabel');
     this.a = new THREE.Vector3();
     this.b = new THREE.Vector3();
     this.t = 0;
@@ -202,8 +207,15 @@ AFRAME.registerComponent('distance-hud', {
     this.cam.object3D.getWorldPosition(this.b);
     const dx = this.a.x - this.b.x, dz = this.a.z - this.b.z;
     const d = Math.round(Math.sqrt(dx*dx + dz*dz));
+
+    // Подпись видна только вблизи
+    const near = d <= CONFIG.labelRevealMeters;
+    if (this.label) this.label.object3D.visible = near;
+
     this.hudEl.classList.add('ready');
-    this.statusEl.innerHTML = 'До объекта: <span class="dist">' + d + ' м</span>';
+    this.statusEl.innerHTML = near
+      ? '📍 <span class="dist">' + CONFIG.label + '</span> · ' + d + ' м'
+      : 'До объекта: <span class="dist">' + d + ' м</span>';
   }
 });
 
