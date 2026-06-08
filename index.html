@@ -3,274 +3,492 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>AR-нысан · Шымкент</title>
-
-<!-- ============================================================= -->
-<!--  AR.js (location-based) + A-Frame. Версии зафиксированы.       -->
-<!--  ВАЖНО: страница работает ТОЛЬКО по HTTPS и в браузере телефона -->
-<!--  (нужны камера + GPS + компас/гироскоп).                        -->
-<!-- ============================================================= -->
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/three.js/build/ar-threex-location-only.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
-
-<!-- Шрифты: Unbounded (заголовок) + Golos Text (текст) — оба с кириллицей -->
+<title>Тюльпаны Шымкента — прототип</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@500;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --green:#0d4d35;
-    --green-2:#0a3a28;
-    --gold:#e0b653;
-    --gold-bright:#ffd66b;
-    --ink:#06241a;
+    --green:#0e5238; --green-2:#0a3a28; --green-3:#072a1d; --ink:#052016;
+    --gold:#e6b94e; --gold-bright:#ffd66b; --cream:#f3ead2;
+    --ok:#46e08a; --bad:#ff6a6a;
+    --tulip:#e23b3b;            /* меняется под точку */
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;
-            font-family:"Golos Text",system-ui,sans-serif;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%; background:var(--ink); color:#fff;
+    font-family:"Golos Text",system-ui,sans-serif; overflow:hidden;}
+  #app{position:relative; height:100%; width:100%; max-width:520px; margin:0 auto; overflow:hidden;
+    background:radial-gradient(130% 80% at 50% -10%, var(--green) 0%, var(--green-2) 50%, var(--green-3) 100%);}
+  /* лёгкая орнаментальная текстура */
+  #app::before{content:""; position:absolute; inset:0; pointer-events:none; opacity:.07;
+    background-image:repeating-linear-gradient(45deg,var(--gold) 0 1px,transparent 1px 26px),
+                     repeating-linear-gradient(-45deg,var(--gold) 0 1px,transparent 1px 26px);}
 
-  /* ---- Стартовый экран (крупный, высокий контраст) ---- */
-  #overlay{
-    position:fixed; inset:0; z-index:9999;
-    display:flex; flex-direction:column; justify-content:center; align-items:center;
-    text-align:center; padding:28px;
-    background:
-      radial-gradient(120% 90% at 50% 0%, var(--green) 0%, var(--green-2) 55%, var(--ink) 100%);
-    color:#fff;
-  }
-  #overlay::before{
-    content:""; position:absolute; inset:0; opacity:.10; pointer-events:none;
-    background-image:
-      repeating-linear-gradient(45deg, var(--gold) 0 2px, transparent 2px 22px),
-      repeating-linear-gradient(-45deg, var(--gold) 0 2px, transparent 2px 22px);
-  }
-  .ov-inner{position:relative; max-width:560px;}
-  .badge{
-    display:inline-block; font-family:"Unbounded"; font-weight:600; font-size:15px;
-    letter-spacing:.18em; text-transform:uppercase; color:var(--gold-bright);
-    border:2px solid var(--gold); border-radius:999px; padding:8px 18px; margin-bottom:22px;
-  }
-  h1{
-    font-family:"Unbounded"; font-weight:800; line-height:1.05;
-    font-size:clamp(30px,8vw,46px); margin:0 0 18px; color:#fff;
-    text-shadow:0 2px 0 rgba(0,0,0,.35);
-  }
-  .lead{font-size:clamp(18px,4.6vw,22px); font-weight:500; line-height:1.5; color:#eafff3; margin:0 auto 26px; max-width:480px;}
-  .steps{
-    text-align:left; font-size:clamp(17px,4.4vw,20px); line-height:1.55;
-    background:rgba(0,0,0,.28); border:2px solid rgba(224,182,83,.5); border-radius:18px;
-    padding:18px 20px 18px 20px; margin:0 0 28px;
-  }
-  .steps b{color:var(--gold-bright);}
-  .steps p{margin:0 0 10px; padding-left:30px; position:relative;}
-  .steps p:last-child{margin-bottom:0;}
-  .steps p::before{content:"›"; position:absolute; left:6px; color:var(--gold); font-weight:800; font-size:22px; line-height:1;}
-  #startBtn{
-    appearance:none; border:none; cursor:pointer;
-    font-family:"Unbounded"; font-weight:800; font-size:clamp(20px,5.4vw,26px);
-    color:var(--ink); background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-    padding:20px 40px; border-radius:18px; width:100%; max-width:420px;
-    box-shadow:0 10px 0 rgba(0,0,0,.35), 0 0 0 3px rgba(255,255,255,.15) inset;
-    transition:transform .08s ease;
-  }
-  #startBtn:active{transform:translateY(4px); box-shadow:0 6px 0 rgba(0,0,0,.35);}
-  .note{margin-top:18px; font-size:14px; color:#bfe7d3; opacity:.85;}
+  .screen{position:absolute; inset:0; padding:26px 22px; display:none; flex-direction:column;
+    overflow-y:auto; animation:fade .35s ease;}
+  .screen.active{display:flex;}
+  @keyframes fade{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
 
-  /* ---- HUD поверх камеры ---- */
-  #hud{
-    position:fixed; left:0; right:0; top:0; z-index:9000;
-    display:flex; justify-content:center; pointer-events:none; padding:14px 12px;
-  }
-  #hud .pill{
-    background:rgba(6,36,26,.82); border:2px solid var(--gold);
-    color:#fff; border-radius:999px; padding:12px 22px;
-    font-family:"Unbounded"; font-weight:600; font-size:clamp(16px,4.6vw,20px);
-    box-shadow:0 6px 20px rgba(0,0,0,.4); display:flex; align-items:center; gap:10px;
-  }
-  #hud .dot{width:12px;height:12px;border-radius:50%;background:#ff5a5a;}
-  #hud.ready .dot{background:#46e08a;}
-  #hud .dist{color:var(--gold-bright);}
+  .proto-tag{position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:50;
+    background:var(--gold); color:var(--ink); font-family:"Unbounded"; font-weight:700;
+    font-size:11px; letter-spacing:.12em; padding:4px 14px; border-radius:0 0 12px 12px;}
 
-  .arjs-loader{
-    height:100%; width:100%; position:absolute; top:0; left:0; z-index:8000;
-    background:rgba(6,36,26,.92); display:flex; justify-content:center; align-items:center;
-    color:#fff; font-size:20px; font-family:"Unbounded";
-  }
+  h1{font-family:"Unbounded"; font-weight:800; font-size:clamp(30px,8vw,42px); line-height:1.04; margin:0;}
+  h2{font-family:"Unbounded"; font-weight:700; font-size:clamp(22px,6vw,28px); margin:0 0 12px; color:var(--gold-bright);}
+  p{font-size:clamp(16px,4.4vw,19px); line-height:1.55;}
+  .muted{color:#bfe7d3;}
+  .btn{appearance:none; border:none; cursor:pointer; font-family:"Unbounded"; font-weight:800;
+    font-size:clamp(18px,5vw,22px); color:var(--ink); width:100%;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    padding:18px 26px; border-radius:16px; box-shadow:0 9px 0 rgba(0,0,0,.35);
+    transition:transform .08s, box-shadow .08s;}
+  .btn:active{transform:translateY(5px); box-shadow:0 4px 0 rgba(0,0,0,.35);}
+  .btn.ghost{background:transparent; color:#fff; border:2px solid rgba(230,185,78,.6); box-shadow:none; font-weight:700; font-size:16px;}
+  .btn.ghost:active{transform:scale(.98);}
+  .spacer{flex:1;}
+
+  /* ----- ВХОД ----- */
+  .logo-tulip{width:96px; height:120px; margin:6px auto 14px; display:block;}
+  .badge{display:inline-block; font-family:"Unbounded"; font-weight:600; font-size:12px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--gold-bright);
+    border:2px solid var(--gold); border-radius:999px; padding:7px 16px; margin-bottom:18px; align-self:center;}
+  .field{margin:22px 0 16px;}
+  .field label{display:block; font-weight:600; margin-bottom:8px; color:#eafff3;}
+  .field input{width:100%; font-family:"Golos Text"; font-size:20px; padding:15px 16px; border-radius:14px;
+    border:2px solid rgba(230,185,78,.5); background:rgba(0,0,0,.25); color:#fff;}
+  .field input:focus{outline:none; border-color:var(--gold-bright);}
+
+  /* ----- КАРТА ЗАДАНИЯ / ЗАГАДКА ----- */
+  .step-row{display:flex; align-items:center; gap:10px; font-family:"Unbounded"; font-weight:600;
+    font-size:14px; color:var(--gold-bright); margin-bottom:18px;}
+  .dots{display:flex; gap:6px;}
+  .dots i{width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.25);}
+  .dots i.done{background:var(--ok);} .dots i.cur{background:var(--gold-bright); box-shadow:0 0 0 4px rgba(255,214,107,.25);}
+  .riddle-card{background:rgba(0,0,0,.3); border:2px solid rgba(230,185,78,.45); border-left:6px solid var(--gold);
+    border-radius:18px; padding:20px; margin-bottom:18px;}
+  .riddle-card .k{font-family:"Unbounded"; font-weight:700; color:var(--gold-bright); font-size:13px;
+    letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;}
+  .riddle-card .r{font-size:clamp(18px,5vw,22px); line-height:1.5; font-weight:500; font-style:italic;}
+
+  /* компас */
+  .compass{display:none; flex-direction:column; align-items:center; margin:6px 0 16px;}
+  .compass.show{display:flex;}
+  .dial{width:150px; height:150px; border-radius:50%; border:3px solid rgba(230,185,78,.5);
+    position:relative; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 40%, rgba(255,214,107,.12), transparent 70%);}
+  .needle{width:0;height:0; border-left:18px solid transparent; border-right:18px solid transparent;
+    border-bottom:64px solid var(--gold-bright); transform-origin:50% 100%; transition:transform .6s ease;
+    filter:drop-shadow(0 0 8px rgba(255,214,107,.6));}
+  .dist{font-family:"Unbounded"; font-weight:800; font-size:30px; color:var(--gold-bright); margin-top:12px;}
+  .dist small{display:block; font-family:"Golos Text"; font-weight:500; font-size:14px; color:#bfe7d3; letter-spacing:0;}
+
+  /* ----- ПРИБЫТИЕ: тюльпан + видео-гид ----- */
+  .bloom-wrap{display:flex; flex-direction:column; align-items:center; text-align:center;}
+  .tulip-big{width:170px; height:210px; margin:4px auto 6px;}
+  /* видео-рамка гида */
+  .videoframe{position:relative; width:100%; max-width:340px; margin:14px auto 6px;
+    border:3px solid var(--gold); border-radius:18px; overflow:hidden;
+    background:linear-gradient(160deg,#0c4a33,#06241a); aspect-ratio:16/10;}
+  .videoframe .rec{position:absolute; top:10px; left:12px; display:flex; align-items:center; gap:6px;
+    font-family:"Unbounded"; font-weight:700; font-size:11px; letter-spacing:.1em; color:#fff; z-index:3;}
+  .videoframe .rec b{width:9px;height:9px;border-radius:50%;background:#ff5a5a; animation:blink 1.1s infinite;}
+  @keyframes blink{50%{opacity:.2}}
+  .videoframe .stub{position:absolute; bottom:8px; right:10px; font-size:10px; color:#9fd9bd; z-index:3;}
+  .guide-svg{position:absolute; inset:0; width:100%; height:100%;}
+  .subtitle{min-height:64px; font-size:clamp(16px,4.4vw,19px); line-height:1.5; margin:12px 4px 4px; color:#f3ead2;}
+  .ctrls{display:flex; gap:10px; width:100%; margin:8px 0 6px;}
+  .ctrls .btn{font-size:15px; padding:13px;}
+
+  /* ----- ВИКТОРИНА ----- */
+  .fact{background:rgba(255,214,107,.1); border:2px solid rgba(230,185,78,.4); border-radius:16px;
+    padding:16px 18px; margin-bottom:18px; font-size:clamp(16px,4.3vw,18px); line-height:1.5;}
+  .q{font-family:"Unbounded"; font-weight:700; font-size:clamp(18px,5vw,22px); margin:0 0 14px;}
+  .opts{display:flex; flex-direction:column; gap:12px;}
+  .opt{appearance:none; text-align:left; cursor:pointer; font-family:"Golos Text"; font-weight:600;
+    font-size:clamp(16px,4.4vw,19px); color:#fff; background:rgba(0,0,0,.28);
+    border:2px solid rgba(230,185,78,.5); border-radius:14px; padding:16px;}
+  .opt.ok{background:rgba(70,224,138,.25); border-color:var(--ok);}
+  .opt.bad{background:rgba(255,106,106,.22); border-color:var(--bad);}
+  .fb{margin-top:14px; font-weight:700; font-size:18px; min-height:24px;}
+  .fb.ok{color:var(--ok);} .fb.bad{color:var(--bad);}
+
+  /* ----- СБОР / ФИНАЛ ----- */
+  .center{align-items:center; text-align:center; justify-content:center;}
+  .bouquet{display:flex; justify-content:center; gap:6px; margin:18px 0;}
+  .bouquet .tulip-mini{width:54px; height:74px; opacity:.25; transition:opacity .4s, transform .4s;}
+  .bouquet .tulip-mini.got{opacity:1; transform:translateY(-4px);}
+  .score-pill{font-family:"Unbounded"; font-weight:800; font-size:22px; color:var(--gold-bright);}
+  .board{width:100%; margin-top:16px; background:rgba(0,0,0,.28); border-radius:16px; overflow:hidden;
+    border:2px solid rgba(230,185,78,.35);}
+  .board .row{display:flex; justify-content:space-between; align-items:center; padding:13px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08); font-size:16px;}
+  .board .row:last-child{border-bottom:none;}
+  .board .row.me{background:rgba(255,214,107,.16); font-weight:700;}
+  .board .row .pos{font-family:"Unbounded"; font-weight:800; color:var(--gold-bright); width:28px;}
+  .board .row .nm{flex:1; padding:0 10px;}
+  .board .row .pts{font-family:"Unbounded"; font-weight:700;}
 </style>
 </head>
 <body>
+<div class="proto-tag">ПРОТОТИП · симуляция GPS/AR</div>
+<div id="app">
 
-<!-- ===================  СТАРТОВЫЙ ЭКРАН  =================== -->
-<div id="overlay">
-  <div class="ov-inner">
-    <div class="badge">AR · Шымкент</div>
-    <h1>Найди объект<br>в реальном мире</h1>
-    <p class="lead">Наведи камеру телефона в сторону точки — там появится 3D-объект. Чем ближе подходишь, тем он крупнее.</p>
-    <div class="steps">
-      <p>Разреши <b>камеру</b>, <b>геопозицию</b> и <b>движение</b></p>
-      <p>Выйди на <b>открытое место</b> (под небом точнее GPS)</p>
-      <p>Медленно поводи телефоном — компас откалибруется</p>
+  <!-- ВХОД -->
+  <section id="s-entry" class="screen active">
+    <div class="spacer"></div>
+    <svg class="logo-tulip" viewBox="0 0 80 100">
+      <path d="M40 96 C40 70 40 55 40 50" stroke="#2f7d4f" stroke-width="5" fill="none"/>
+      <path d="M40 70 C26 66 20 54 22 44 C30 50 38 58 40 70Z" fill="#2f7d4f"/>
+      <path d="M40 70 C54 66 60 54 58 44 C50 50 42 58 40 70Z" fill="#3a955f"/>
+      <path d="M40 52 C30 52 24 40 26 26 C32 34 36 38 40 38 C44 38 48 34 54 26 C56 40 50 52 40 52Z" fill="#e23b3b"/>
+      <path d="M40 50 C34 50 30 40 30 28 C34 36 38 38 40 38Z" fill="#c22f2f"/>
+      <path d="M40 50 C46 50 50 40 50 28 C46 36 42 38 40 38Z" fill="#f0564f"/>
+    </svg>
+    <div class="badge">AR-квест · Шымкент</div>
+    <h1 style="text-align:center">Тюльпаны<br>Шымкента</h1>
+    <p class="muted" style="text-align:center; margin:14px 0 0">Собери сад родного города. Найди достопримечательности, узнай их историю — и каждая подарит тебе свой тюльпан.</p>
+    <div class="field">
+      <label>Как тебя зовут?</label>
+      <input id="nick" type="text" placeholder="Имя или ник" value="" maxlength="18"/>
     </div>
-    <button id="startBtn">Бастау · Начать</button>
-    <div class="note">Если объект «уехал» в сторону — поверни телефон «восьмёркой», это калибрует компас.</div>
-  </div>
+    <button class="btn" onclick="startGame()">Начать поиск 🌷</button>
+    <p class="muted" style="font-size:13px; text-align:center; margin-top:14px">Это прототип: «GPS» и «AR» имитируются кнопками, чтобы пройти всю игру не выходя из дома.</p>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ЗАДАНИЕ / ЗАГАДКА / КОМПАС -->
+  <section id="s-quest" class="screen">
+    <div class="step-row">
+      <span>ЗАДАНИЕ <span id="q-num">1</span> / 3</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="riddle-card">
+      <div class="k">Загадка — куда идти</div>
+      <div class="r" id="riddle">…</div>
+    </div>
+    <p class="muted" id="route-note" style="font-size:13px"></p>
+
+    <div class="compass" id="compass">
+      <div class="dial"><div class="needle" id="needle"></div></div>
+      <div class="dist"><span id="dist">150</span> м<small id="warm">далеко — иди по загадке</small></div>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="btn ghost" id="helpBtn" onclick="toggleCompass()" style="margin-bottom:12px">🧭 Заблудился? Включить стрелку</button>
+    <button class="btn" onclick="approach()">👣 Подойти ближе (симуляция)</button>
+  </section>
+
+  <!-- ПРИБЫТИЕ: тюльпан + видео-гид + звук -->
+  <section id="s-arrived" class="screen">
+    <div class="bloom-wrap">
+      <div class="step-row" style="justify-content:center"><span id="arr-name">Точка</span></div>
+      <svg class="tulip-big" id="tulipBig" viewBox="0 0 100 130"></svg>
+
+      <div class="videoframe">
+        <div class="rec"><b></b> ВИДЕО-ГИД</div>
+        <div class="stub">здесь — реальное видео</div>
+        <svg class="guide-svg" id="guideSvg" viewBox="0 0 340 210"></svg>
+      </div>
+      <div class="subtitle" id="subtitle"></div>
+
+      <div class="ctrls">
+        <button class="btn ghost" id="voiceBtn" onclick="speakLine()">🔊 Озвучить</button>
+        <button class="btn ghost" id="soundBtn" onclick="toggleAmbient()">🎵 Звук вкл/выкл</button>
+      </div>
+      <button class="btn" onclick="showQuiz()" style="margin-top:8px">Продолжить →</button>
+    </div>
+  </section>
+
+  <!-- ВИКТОРИНА -->
+  <section id="s-quiz" class="screen">
+    <div class="step-row"><span id="quiz-name">Точка</span></div>
+    <div class="fact" id="fact"></div>
+    <div class="q" id="question"></div>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="quizNext" style="display:none" onclick="collect()">Сорвать тюльпан 🌷</button>
+  </section>
+
+  <!-- СБОР -->
+  <section id="s-collected" class="screen center">
+    <h2 id="col-title">Тюльпан в букете!</h2>
+    <svg class="tulip-big" id="tulipCollected" viewBox="0 0 100 130"></svg>
+    <p id="col-text" class="muted"></p>
+    <div class="bouquet" id="bouquet2"></div>
+    <div class="score-pill" id="col-score"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="contBtn" onclick="nextStep()">Дальше →</button>
+  </section>
+
+  <!-- ФИНАЛ -->
+  <section id="s-finish" class="screen center">
+    <div class="badge" style="margin-top:10px">Сад собран</div>
+    <h1 style="text-align:center; font-size:34px">Букет Шымкента<br>расцвёл! 🌷</h1>
+    <div class="bouquet" id="bouquetF"></div>
+    <p class="muted" id="fin-text"></p>
+    <div class="board" id="board"></div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="restart()">Сыграть заново</button>
+  </section>
+
 </div>
-
-<!-- ===================  HUD  =================== -->
-<div id="hud">
-  <div class="pill"><span class="dot"></span><span id="status">GPS ізделуде…</span></div>
-</div>
-
-<!-- ===================  AR-СЦЕНА  =================== -->
-<!-- Для теста на КОМПЬЮТЕРЕ можно добавить в gps-new-camera:
-     simulateLatitude: 42.3168; simulateLongitude: 69.5876
-     (тогда камера будет «стоять» в этой точке).  -->
-<a-scene
-  vr-mode-ui="enabled: false"
-  arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false"
-  renderer="antialias: true; alpha: true"
-  embedded>
-
-  <a-camera gps-new-camera="gpsMinDistance: 5"></a-camera>
-
-  <!-- Объект-маяк. Координаты подставляются из CONFIG в JS ниже. -->
-  <a-entity id="poi" distance-hud>
-    <!-- основание-кольцо, медленно вращается -->
-    <a-torus color="#e0b653" radius="2.4" radius-tubular="0.18"
-             rotation="-90 0 0" position="0 0.2 0"
-             animation="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear"></a-torus>
-    <!-- колонна -->
-    <a-cylinder color="#0d4d35" radius="0.9" height="5" position="0 2.7 0"
-                material="metalness:0.1; roughness:0.7"></a-cylinder>
-    <!-- золотой пояс -->
-    <a-cylinder color="#e0b653" radius="0.95" height="0.5" position="0 4.1 0"></a-cylinder>
-    <!-- навершие -->
-    <a-cone color="#ffd66b" radius-bottom="1.3" radius-top="0" height="2.4" position="0 6.4 0"></a-cone>
-    <!-- парящая «искра», покачивается вверх-вниз -->
-    <a-octahedron color="#ffd66b" radius="0.7" position="0 9 0"
-                  animation="property: position; to: 0 9.8 0; dir: alternate; loop: true; dur: 1600; easing: easeInOutSine"
-                  animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-octahedron>
-    <!-- подпись: казахский шрифт (MSDF), видна ближе CONFIG.labelRevealMeters, смотрит на игрока -->
-    <a-entity id="poiLabel" visible="false"
-              look-at="[gps-new-camera]"
-              position="0 11 0" scale="14 14 14"
-              text="value: Тарихи нысан; align: center; color: #ffd66b;
-                    shader: msdf; negate: false;
-                    font: kk-msdf.json; font-image: kk-msdf.png"></a-entity>
-  </a-entity>
-</a-scene>
 
 <script>
-/* ================================================================
-   НАСТРОЙКИ — меняй здесь
-   ================================================================ */
-const CONFIG = {
-  // 'demo'  → объект ставится в N метрах СЕВЕРНЕЕ того места, где ты стоишь
-  //           (гарантированно увидишь — для первого теста).
-  // 'fixed' → объект стоит в заданных координатах (для реальной игры).
-  mode: 'demo',
+/* ===== ДАННЫЕ ТОЧЕК (светские, Шымкент) ===== */
+const POINTS = [
+  { id:'citadel', name:'Цитадель', color:'#e23b3b', sort:'красный (Грейга)',
+    riddle:'Я стою на древнем холме, где когда-то были крепостные стены. С меня начался весь Шымкент. Найди место, откуда вырос город.',
+    guide:'Ты на Цитадели — сердце старого Шымкента! Тысячу лет назад здесь была крепость, мимо шли караваны Великого Шёлкового пути.',
+    fact:'Цитадель — древнее городище. Именно отсюда, с укреплённого холма у реки, и вырос современный город.',
+    q:'С чего начался Шымкент?',
+    options:['С крепости на холме (Цитадель)','С железнодорожной станции','С нефтяного завода'], correct:0 },
 
-  demoDistanceMeters: 25,   // на сколько метров севернее в режиме demo
+  { id:'independence', name:'Парк Независимости', color:'#f0b429', sort:'жёлтый',
+    riddle:'Иди туда, где под золотым шаныраком собрались все народы города, а рядом тянется лента истории страны.',
+    guide:'Это Парк Независимости. Видишь «Алтын шаңырақ»? Он символизирует общий дом, где в мире живут десятки народов Шымкента.',
+    fact:'В Шымкенте живут представители более 100 этносов. Монумент «Алтын шаңырақ» — символ единства и общего дома.',
+    q:'Что символизирует «Алтын шаңырақ»?',
+    options:['Общий дом и единство народов','Древнюю крепость','Спортивную победу'], correct:0 },
 
-  // Координаты объекта в режиме 'fixed' (пример: р-н пл. Ордабасы, Шымкент —
-  // заменишь на свои):
-  latitude:  42.3168,
-  longitude: 69.5876,
+  { id:'kenbaba', name:'Этнопарк Кен Баба', color:'#e86a9a', sort:'розовый',
+    riddle:'Найди семейный парк у воды, где живут юрты и сказки, и куда детей водят с самого детства.',
+    guide:'Добро пожаловать в Кен Баба — любимый семейный парк! Здесь оживают казахские традиции: юрты, домбра, народные ремёсла.',
+    fact:'Кен Баба — этно-парк, где можно увидеть казахский быт: юрту, домбру и народные ремёсла.',
+    q:'Что можно увидеть в этно-парке Кен Баба?',
+    options:['Казахскую юрту и традиции','Древнюю крепость','Нефтяной завод'], correct:0 }
+];
 
-  label: 'Тарихи нысан',    // подпись над объектом
+/* ===== СОСТОЯНИЕ ===== */
+let route=[], step=0, score=0, startTime=0, dist=150, ambientOn=false;
+const collectedColors=[];
 
-  labelRevealMeters: 10     // подпись появляется, когда подошёл ближе этого (м)
-};
-/* ================================================================ */
+/* ===== УТИЛИТЫ: тюльпан и гид как SVG ===== */
+function tulipSVG(color, bloom){
+  const open = bloom ? '' : 'style="transform:scaleY(.3) translateY(20px); transform-origin:50% 80%"';
+  return `
+   <path d="M50 126 C50 90 50 70 50 62" stroke="#2f7d4f" stroke-width="6" fill="none"/>
+   <path d="M50 92 C30 86 20 68 24 52 C38 60 47 74 50 92Z" fill="#2f7d4f"/>
+   <path d="M50 92 C70 86 80 68 76 52 C62 60 53 74 50 92Z" fill="#3a955f"/>
+   <g ${open}>
+     <path d="M50 64 C36 64 28 46 30 26 C38 38 44 44 50 44 C56 44 62 38 70 26 C72 46 64 64 50 64Z" fill="${color}"/>
+     <path d="M50 62 C40 62 34 46 34 28 C40 40 46 44 50 44Z" fill="${shade(color,-18)}"/>
+     <path d="M50 62 C60 62 66 46 66 28 C60 40 54 44 50 44Z" fill="${shade(color,18)}"/>
+   </g>`;
+}
+function shade(hex,p){let c=hex.replace('#','');let r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+  r=Math.max(0,Math.min(255,r+p));g=Math.max(0,Math.min(255,g+p));b=Math.max(0,Math.min(255,b+p));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');}
 
-document.getElementById('poiLabel').setAttribute('text', 'value', CONFIG.label);
-
-// Расчёт расстояния игрок ↔ объект, вывод в HUD
-AFRAME.registerComponent('distance-hud', {
-  init(){
-    this.cam = document.querySelector('[gps-new-camera]');
-    this.label = document.getElementById('poiLabel');
-    this.a = new THREE.Vector3();
-    this.b = new THREE.Vector3();
-    this.t = 0;
-    this.statusEl = document.getElementById('status');
-    this.hudEl = document.getElementById('hud');
-  },
-  tick(time){
-    if (!window.__gpsReady || !this.cam) return;
-    if (time - this.t < 250) return;   // обновляем ~4 раза/сек
-    this.t = time;
-    this.el.object3D.getWorldPosition(this.a);
-    this.cam.object3D.getWorldPosition(this.b);
-    const dx = this.a.x - this.b.x, dz = this.a.z - this.b.z;
-    const d = Math.round(Math.sqrt(dx*dx + dz*dz));
-
-    // Подпись видна только вблизи
-    const near = d <= CONFIG.labelRevealMeters;
-    if (this.label) this.label.object3D.visible = near;
-
-    this.hudEl.classList.add('ready');
-    this.statusEl.innerHTML = near
-      ? '📍 <span class="dist">' + CONFIG.label + '</span> · ' + d + ' м'
-      : 'До объекта: <span class="dist">' + d + ' м</span>';
-  }
-});
-
-window.__gpsReady = false;
-
-// Подставляем координаты объекта в зависимости от режима
-function placePoi(){
-  const poi = document.getElementById('poi');
-
-  if (CONFIG.mode === 'fixed'){
-    poi.setAttribute('gps-new-entity-place',
-      `latitude: ${CONFIG.latitude}; longitude: ${CONFIG.longitude}`);
-    return;
-  }
-
-  // demo: берём текущую позицию и сдвигаем на N метров к северу
-  if (!navigator.geolocation){
-    alert('Геолокация недоступна в этом браузере.');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    (pos)=>{
-      const lat = pos.coords.latitude + (CONFIG.demoDistanceMeters / 111320);
-      const lng = pos.coords.longitude;
-      poi.setAttribute('gps-new-entity-place', `latitude: ${lat}; longitude: ${lng}`);
-    },
-    (err)=>{ alert('Не удалось получить GPS: ' + err.message); },
-    { enableHighAccuracy:true, timeout:15000 }
-  );
+function guideSVG(){
+  return `
+   <defs><radialGradient id="gl" cx="50%" cy="40%" r="60%">
+     <stop offset="0%" stop-color="#ffe9a8"/><stop offset="100%" stop-color="#e6b94e" stop-opacity="0"/>
+   </radialGradient></defs>
+   <ellipse cx="170" cy="120" rx="120" ry="90" fill="url(#gl)" opacity="0.5"/>
+   <!-- тело-стебель -->
+   <path d="M170 200 C170 150 170 130 170 120" stroke="#2f7d4f" stroke-width="10" fill="none"/>
+   <!-- голова-тюльпан -->
+   <g id="gHead">
+     <path d="M170 120 C150 120 138 92 142 60 C154 80 162 90 170 90 C178 90 186 80 198 60 C202 92 190 120 170 120Z" fill="#e23b3b"/>
+     <circle cx="160" cy="92" r="5" fill="#fff"/><circle cx="180" cy="92" r="5" fill="#fff"/>
+     <circle cx="160" cy="93" r="2.4" fill="#222"/><circle cx="180" cy="93" r="2.4" fill="#222"/>
+     <path d="M162 104 Q170 110 178 104" stroke="#5a1010" stroke-width="3" fill="none" stroke-linecap="round"/>
+   </g>`;
 }
 
-// Старт по кнопке (нужно для iOS — разрешение на датчики только по тапу)
-document.getElementById('startBtn').addEventListener('click', async ()=>{
-  try{
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function'){
-      await DeviceOrientationEvent.requestPermission();
-    }
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function'){
-      await DeviceMotionEvent.requestPermission();
-    }
-  }catch(e){ /* пользователь мог отклонить — продолжаем */ }
+/* ===== ЭКРАНЫ ===== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('app').scrollTop=0;}
 
-  placePoi();
-  document.getElementById('overlay').style.display = 'none';
-});
+/* ===== СТАРТ ===== */
+function startGame(){
+  const n=document.getElementById('nick').value.trim();
+  if(!n){document.getElementById('nick').focus(); return;}
+  window.PLAYER=n;
+  // ПЕРСОНАЛЬНЫЙ МАРШРУТ: случайный порядок (каждому свой)
+  route=[0,1,2].sort(()=>Math.random()-0.5);
+  step=0; score=0; startTime=Date.now(); collectedColors.length=0;
+  initAudio();           // создаём аудио по жесту пользователя
+  showQuest();
+}
 
-// Ловим первый GPS-фикс камеры → включаем HUD
-window.addEventListener('load', ()=>{
-  const cam = document.querySelector('[gps-new-camera]');
-  if (cam){
-    cam.addEventListener('gps-camera-update-position', ()=>{ window.__gpsReady = true; });
+function showQuest(){
+  const p=POINTS[route[step]];
+  document.documentElement.style.setProperty('--tulip',p.color);
+  document.getElementById('q-num').textContent=step+1;
+  document.getElementById('riddle').textContent=p.riddle;
+  // точки прогресса
+  const dots=document.getElementById('dots'); dots.innerHTML='';
+  route.forEach((_,i)=>{const el=document.createElement('i');
+    el.className=i<step?'done':(i===step?'cur':''); dots.appendChild(el);});
+  // показать персональный порядок (демо механики «каждому свой путь»)
+  const names=route.map((idx,i)=> (i<step?'✓ ':(i===step?'➤ ':'• '))+POINTS[idx].name).join('   ');
+  document.getElementById('route-note').textContent='Твой маршрут (у каждого игрока свой): '+names;
+  // сброс компаса/дистанции
+  dist=150; document.getElementById('dist').textContent=dist;
+  document.getElementById('warm').textContent='далеко — иди по загадке';
+  document.getElementById('compass').classList.remove('show');
+  document.getElementById('helpBtn').style.display='';
+  document.getElementById('needle').style.transform='rotate('+(Math.random()*300-150)+'deg)';
+  show('s-quest');
+}
+
+function toggleCompass(){
+  document.getElementById('compass').classList.add('show');
+  document.getElementById('helpBtn').style.display='none';
+}
+
+/* симуляция приближения */
+function approach(){
+  dist = dist>90?85 : dist>40?38 : dist>15?12 : 0;
+  document.getElementById('dist').textContent=Math.max(dist,0);
+  const warm=document.getElementById('warm');
+  const needle=document.getElementById('needle');
+  if(dist>40){warm.textContent='теплее…'; needle.style.transform='rotate(-20deg)';}
+  else if(dist>15){warm.textContent='совсем близко! бутон пульсирует';
+    needle.style.transform='rotate(-5deg)'; bloomChime(0.3);}
+  if(dist<=15){ arrive(); }
+}
+
+/* ===== ПРИБЫТИЕ ===== */
+function arrive(){
+  const p=POINTS[route[step]];
+  document.getElementById('arr-name').textContent='📍 '+p.name;
+  document.getElementById('tulipBig').innerHTML=tulipSVG(p.color,false);
+  document.getElementById('guideSvg').innerHTML=guideSVG();
+  // перекрасить голову гида под цвет точки
+  setTimeout(()=>{const head=document.querySelector('#gHead path'); if(head) head.setAttribute('fill',p.color);},10);
+  document.getElementById('subtitle').textContent='';
+  show('s-arrived');
+  // распускание тюльпана
+  setTimeout(()=>{const g=document.querySelector('#tulipBig g'); if(g){g.style.transition='transform 1.1s cubic-bezier(.2,1.3,.4,1)'; g.style.transform='none';} bloomChime(0.5);},250);
+  // «видео» гид говорит — печать субтитра + анимация головы
+  typeSubtitle(p.guide);
+  if(ambientOn) startAmbient();
+}
+
+let typeTimer=null;
+function typeSubtitle(text){
+  clearInterval(typeTimer);
+  const el=document.getElementById('subtitle'); el.textContent='';
+  const head=document.getElementById('gHead');
+  let i=0;
+  typeTimer=setInterval(()=>{
+    el.textContent=text.slice(0,++i);
+    if(head) head.style.transform = (i%2? 'translateY(-2px)':'translateY(0)');
+    if(i>=text.length){clearInterval(typeTimer); if(head) head.style.transform='';}
+  },28);
+}
+
+/* ===== ВИКТОРИНА ===== */
+function showQuiz(){
+  const p=POINTS[route[step]];
+  document.getElementById('quiz-name').textContent='📍 '+p.name;
+  document.getElementById('fact').textContent='💡 '+p.fact;
+  document.getElementById('question').textContent=p.q;
+  const opts=document.getElementById('opts'); opts.innerHTML='';
+  document.getElementById('fb').textContent=''; document.getElementById('fb').className='fb';
+  document.getElementById('quizNext').style.display='none';
+  p.options.forEach((o,idx)=>{const b=document.createElement('button');
+    b.className='opt'; b.textContent=o; b.onclick=()=>answer(idx,b,p.correct); opts.appendChild(b);});
+  show('s-quiz');
+}
+function answer(idx,btn,correct){
+  const fb=document.getElementById('fb');
+  if(idx===correct){
+    btn.classList.add('ok');
+    document.querySelectorAll('#opts .opt').forEach(b=>b.disabled=true);
+    const fast = (Date.now()-startTime)<99999; // место под бонус за скорость
+    score += 100;
+    fb.className='fb ok'; fb.textContent='Верно! +100 очков';
+    document.getElementById('quizNext').style.display='';
+    bloomChime(0.5);
+  } else {
+    btn.classList.add('bad'); btn.disabled=true;
+    fb.className='fb bad'; fb.textContent='Не то — попробуй ещё. (−0)';
   }
-});
+}
+
+/* ===== СБОР ===== */
+function collect(){
+  const p=POINTS[route[step]];
+  collectedColors.push(p.color);
+  document.getElementById('col-title').textContent='🌷 Тюльпан в букете!';
+  document.getElementById('tulipCollected').innerHTML=tulipSVG(p.color,true);
+  document.getElementById('col-text').textContent=p.name+' — тюльпан «'+p.sort+'». Собрано '+collectedColors.length+' из 3.';
+  document.getElementById('col-score').textContent='Очки: '+score;
+  renderBouquet('bouquet2', collectedColors.length);
+  document.getElementById('contBtn').textContent = (step<2)?'К следующему тюльпану →':'Завершить и собрать букет 🌷';
+  show('s-collected');
+}
+function renderBouquet(elId,n){
+  const b=document.getElementById(elId); b.innerHTML='';
+  for(let i=0;i<3;i++){const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 100 130'); s.setAttribute('class','tulip-mini'+(i<n?' got':''));
+    s.innerHTML=tulipSVG(collectedColors[i]||'#888',true); b.appendChild(s);}
+}
+
+function nextStep(){
+  step++;
+  if(step<route.length){ showQuest(); }
+  else { finish(); }
+}
+
+/* ===== ФИНАЛ ===== */
+function finish(){
+  stopAmbient();
+  renderBouquet('bouquetF',3);
+  const secs=Math.round((Date.now()-startTime)/1000);
+  const mm=String(Math.floor(secs/60)).padStart(2,'0'), ss=String(secs%60).padStart(2,'0');
+  document.getElementById('fin-text').innerHTML='Ты узнал 3 уголка Шымкента!<br>Время: <b>'+mm+':'+ss+'</b> · Очки: <b>'+score+'</b>';
+  // имитация табло на 10 игроков
+  const others=[['Айгуль',300],['Данияр',280],['Мадина',260],['Ерлан',240],['Сабина',220],
+                ['Тимур',200],['Алия',180],['Нурлан',160],['Жанна',140]];
+  others.push([window.PLAYER+' (ты)',score]);
+  others.sort((a,b)=>b[1]-a[1]);
+  const board=document.getElementById('board'); board.innerHTML='';
+  others.slice(0,10).forEach((r,i)=>{const row=document.createElement('div');
+    row.className='row'+(r[0].includes('(ты)')?' me':'');
+    row.innerHTML='<span class="pos">'+(i+1)+'</span><span class="nm">'+r[0]+'</span><span class="pts">'+r[1]+'</span>';
+    board.appendChild(row);});
+  show('s-finish');
+}
+function restart(){ show('s-entry'); }
+
+/* ===== ЗВУК (Web Audio) ===== */
+let actx=null, ambGain=null, ambNodes=[];
+function initAudio(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){} }
+function toggleAmbient(){ ambientOn=!ambientOn; ambientOn?startAmbient():stopAmbient(); }
+function startAmbient(){
+  if(!actx) initAudio(); if(!actx) return; stopAmbient(); ambientOn=true;
+  ambGain=actx.createGain(); ambGain.gain.value=0.0; ambGain.connect(actx.destination);
+  [146.83,220.0].forEach((f,i)=>{const o=actx.createOscillator(); o.type='sine'; o.frequency.value=f;
+    const g=actx.createGain(); g.gain.value=i?0.05:0.08; o.connect(g); g.connect(ambGain); o.start(); ambNodes.push(o);});
+  // лёгкое «дыхание» громкости (как кобыз)
+  const lfo=actx.createOscillator(); lfo.frequency.value=0.15; const lg=actx.createGain(); lg.gain.value=0.03;
+  lfo.connect(lg); lg.connect(ambGain.gain); lfo.start(); ambNodes.push(lfo);
+  ambGain.gain.linearRampToValueAtTime(0.5, actx.currentTime+1.5);
+}
+function stopAmbient(){ try{ ambNodes.forEach(n=>{try{n.stop();}catch(e){}}); ambNodes=[]; if(ambGain){ambGain.disconnect(); ambGain=null;} }catch(e){} }
+function bloomChime(v){ if(!actx) return; try{
+  const o=actx.createOscillator(), g=actx.createGain(); o.type='triangle';
+  o.frequency.setValueAtTime(523,actx.currentTime); o.frequency.exponentialRampToValueAtTime(784,actx.currentTime+0.25);
+  g.gain.setValueAtTime((v||0.4)*0.25,actx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+0.6);
+  o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.65);
+}catch(e){} }
+
+/* ===== ГОЛОС (синтез речи, если доступен) ===== */
+function speakLine(){
+  const p=POINTS[route[step]];
+  try{
+    if(!('speechSynthesis' in window)){alert('В этом браузере синтез речи недоступен — здесь будет реальная озвучка.');return;}
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(p.guide); u.lang='ru-RU'; u.rate=0.96; u.pitch=1.05;
+    speechSynthesis.speak(u);
+  }catch(e){ alert('Синтез речи недоступен — здесь будет реальная озвучка гида.'); }
+}
 </script>
 </body>
 </html>
